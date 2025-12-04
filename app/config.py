@@ -6,7 +6,7 @@ import stripe
 load_dotenv()
 
 STRIPE_KEY_SECRET = os.getenv("STRIPE_KEY_SECRET")
-#STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 
 if not STRIPE_KEY_SECRET:
