@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+import stripe
 
 from ..database import SessionLocal
 from .. import schemas, crud, models
-#from ..config import stripe, STRIPE_WEBHOOK_SECRET
+from ..config import stripe, STRIPE_WEBHOOK_SECRET
 
 router = APIRouter(tags=["payments"])
 
@@ -51,7 +52,7 @@ async def create_payment_intent(payload: schemas.PaymentIntentCreate, db: Sessio
 
     return {"clientSecret": intent.client_secret}
 
-"""
+
 @router.post("/stripe/webhook")
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     payload = await request.body()
@@ -87,4 +88,3 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
                 db.commit()
 
     return {"received": True}
-"""
