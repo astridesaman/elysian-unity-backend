@@ -71,3 +71,25 @@ class WaitlistOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+
+# ==== Paiement / Stripe ====
+
+class CartItemRaw(BaseModel):
+    id: str  # peut être un id numérique ou un slug genre "hoodie-essentials"
+    size: Optional[str] = None
+    qty: int
+
+
+class CustomerInfo(BaseModel):
+    name: str
+    email: EmailStr
+    address: str
+
+
+class PaymentIntentCreate(BaseModel):
+    cart: list[CartItemRaw]
+    customer: CustomerInfo
+    is_student: bool = False  # pour appliquer la remise fêtes/étudiants si tu veux
+
