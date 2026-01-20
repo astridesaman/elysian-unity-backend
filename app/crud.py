@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
 from . import models, schemas
+from .models import Product, Order, OrderItem, WaitlistEntry
 
 
 # === Products ===
@@ -21,44 +22,19 @@ def create_product(db: Session, product: schemas.ProductCreate):
     return db_product
 
 
-# === Orders ===
-def create_order(db: Session, order_in: schemas.OrderCreate):
-    # calcul du total
-    total = 0
-    items_db = []
-
-    for item in order_in.items:
-        product = get_product(db, item.product_id)
-        if not product or not product.active:
-            raise ValueError(f"Produit {item.product_id} indisponible")
-        line_total = product.price * item.quantity
-        total += line_total
-        items_db.append((product, item))
-
-    db_order = models.Order(
-        email=order_in.email,
-        total_amount=total,
-        status="pending",
+def create_order_from_stripe(db, session):
+    order = Order(
+        stripe_session_id=session["id"],
+        customer_email=session["customer_details"]["email"],
+        amount=session["amount_total"] / 100,
+        status="paid"
     )
-    db.add(db_order)
+
+    db.add(order)
     db.commit()
-    db.refresh(db_order)
+    db.refresh(order)
 
-    # créer items
-    for product, item in items_db:
-        db_item = models.OrderItem(
-            order_id=db_order.id,
-            product_id=product.id,
-            size=item.size,
-            quantity=item.quantity,
-            unit_price=product.price,
-        )
-        db.add(db_item)
-
-    db.commit()
-    db.refresh(db_order)
-    return db_order
-
+    return order
 
 def list_orders(db: Session):
     return db.query(models.Order).all()

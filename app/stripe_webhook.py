@@ -1,11 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy.orm import Session
 import stripe
-from ..database import SessionLocal
-from ..config import STRIPE_WEBHOOK_SECRET
-from ..crud import create_order_from_stripe
+import os
+from fastapi import APIRouter, Request, HTTPException, Depends
+from sqlalchemy.orm import Session
+from database import SessionLocal
+from crud import create_order_from_stripe
 
 router = APIRouter(prefix="/orders", tags=["orders"])
+
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 
 def get_db():
@@ -23,7 +26,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
 
     try:
         event = stripe.Webhook.construct_event(
-            payload, sig_header, STRIPE_WEBHOOK_SECRET
+            payload, sig_header, WEBHOOK_SECRET
         )
     except stripe.error.SignatureVerificationError:
         raise HTTPException(status_code=400, detail="Invalid signature")
@@ -35,18 +38,3 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
         create_order_from_stripe(db, session)
 
     return {"status": "success"}
-
-"""
-@router.post("/", response_model=schemas.OrderOut)
-def create_order(order_in: schemas.OrderCreate, db: Session = Depends(get_db)):
-    try:
-        order = crud.create_order(db, order_in)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    return order
-
-
-@router.get("/", response_model=list[schemas.OrderOut])
-def list_orders(db: Session = Depends(get_db)):
-    return crud.list_orders(db)
-"""

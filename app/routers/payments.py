@@ -47,7 +47,9 @@ async def create_payment_intent(payload: schemas.PaymentIntentCreate, db: Sessio
             description=f"Elysian Unity — commande #{order.id}",
         )
     except Exception as e:
-        # si Stripe échoue → on peut marquer la commande en erreur si tu veux
+        # si Stripe échoue → on marque la commande étant annulée
+        order.status = "cancelled"
+        db.commit()
         raise HTTPException(status_code=500, detail=f"Erreur Stripe : {e}")
 
     return {"clientSecret": intent.client_secret}

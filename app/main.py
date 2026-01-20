@@ -8,7 +8,9 @@ app = FastAPI(title="Elysian Unity API")
 
 # Autorisation du front elysianunity.fr
 origins = [
-    "https://elysianunity.fr"
+    "https://elysianunity.fr",
+    "localhost:5500"
+
 ]
 
 app.add_middleware(
